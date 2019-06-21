@@ -2,6 +2,7 @@ import bbox from '@turf/bbox';
 import bboxPolygon from '@turf/bbox-polygon';
 import intersect from '@turf/intersect';
 import {BBox} from '@turf/helpers/lib/geojson';
+import {featureCollection} from '@turf/helpers';
 
 const lon2tile = (lon,zoom) => {
   return (Math.floor((lon+180)/360*Math.pow(2,zoom)));
@@ -37,7 +38,7 @@ export const fromPoint = (geojson, zoom) => {
   }
 }
 
-export const fromPolygon = (geojson, zoom, filter = false) => {
+export const fromPolygon = (geojson, zoom, filter = true) => {
   const [minX, minY, maxX, maxY] = bbox(geojson)
   
   const top_tile    = lat2tile(maxY, zoom);
@@ -52,8 +53,7 @@ export const fromPolygon = (geojson, zoom, filter = false) => {
   for (let x = left_tile; x < left_tile + width; x++) {
     for (let y = top_tile; y < top_tile + height; y++) {
       if (
-        filter === false || 
-        intersect(geojson, bboxPolygon(tileToBbox(x, y, zoom)))
+        filter === false || intersect(geojson, bboxPolygon(tileToBbox(x, y, zoom)))
       ) {
         tiles.push([x, y])
       }
@@ -62,4 +62,7 @@ export const fromPolygon = (geojson, zoom, filter = false) => {
     
   return tiles
 }
-  
+
+export const toGeoJSON = (tiles, zoom) => {
+  return featureCollection(tiles.map(([x, y]) => bboxPolygon(tileToBbox(x, y, zoom))))
+}
